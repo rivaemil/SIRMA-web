@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('vehicles', VehicleController::class);
+   //citas
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('logs', LogController::class);
 });
