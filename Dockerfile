@@ -12,6 +12,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY . /var/www/html
 WORKDIR /var/www/html
 
+# Instala dependencias de Laravel
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
 # Configura Apache para servir desde /public
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite
@@ -21,3 +24,4 @@ RUN echo '<Directory /var/www/html/public>\n\
     AllowOverride All\n\
     Require all granted\n\
 </Directory>' >> /etc/apache2/apache2.conf
+
