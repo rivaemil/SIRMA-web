@@ -35,4 +35,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('mechanics', MechanicController::class);
 });
 
+Route::middleware(['auth:sanctum', 'role:mechanic'])->group(function () {
+    Route::get('/mechanic/logs', [LogController::class, 'mechanicLogs']);
+    Route::get('/mechanic/logs/{id}', [LogController::class, 'mechanicShow']);
+    Route::post('/mechanic/logs', [LogController::class, 'storeAsMechanic']);
+    Route::put('/mechanic/logs/{id}', [LogController::class, 'updateAsMechanic']);
+    Route::patch('/mechanic/logs/{id}', [LogController::class, 'updateAsMechanic']);
+    Route::delete('/mechanic/logs/{id}', [LogController::class, 'destroyAsMechanic']);
 
+    Route::get('/lookup/clients', [ClientController::class, 'index']);
+    Route::get('/lookup/vehicles', [VehicleController::class, 'index']);
+});

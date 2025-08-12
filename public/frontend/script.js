@@ -7,6 +7,11 @@ let AUTH = {
   user: null, // { id, name, email, rol }
 };
 
+function getRole() {
+  const u = AUTH?.user || {};
+  return u.role || u.rol || null;
+}
+
 // =======================
 // Referencias de la UI
 // =======================
@@ -154,7 +159,8 @@ async function handleLogin(e) {
     AUTH.token = data.token;
     AUTH.user = data.user;
 
-    AUTH.user.rol = AUTH.user.rol || AUTH.user.role;
+    AUTH.user.role = AUTH.user.role || AUTH.user.rol;
+    AUTH.user.rol  = AUTH.user.rol  || AUTH.user.role;
 
     sessionStorage.setItem('auth', JSON.stringify(AUTH));
     showToast('Inicio de sesión exitoso', 'success');
@@ -280,13 +286,14 @@ async function apiFetch(path, options = {}) {
 // =======================
 async function loadMechanicNotes(readOnly = false) {
   try {
-    // Solo admin puede listar logs según api.php
-    const rol = AUTH?.user?.rol;
+    const role = getRole();
     let logs = [];
-    if (rol === 'admin') {
+
+    if (role === 'admin') {
       logs = await apiFetch('/logs', { method: 'GET' });
-    } else if (rol === 'mechanic') {
-      // No hay endpoint de “mis logs” para mecánico; mostramos mensaje vacío
+    } else if (role === 'mechanic') {
+      logs = await apiFetch('/mechanic/logs', { method: 'GET' });
+    } else {
       logs = [];
     }
 
@@ -297,8 +304,10 @@ async function loadMechanicNotes(readOnly = false) {
     }
     emptyNotes.style.display = 'none';
 
+    // mecánico puede editar/borrar SUS logs
+    const canEdit = (role === 'admin') || (role === 'mechanic');
     logs.forEach(log => {
-      const card = createNoteCardFromAPI(log, /*isMechanicView*/ true, /*readOnly*/ readOnly || rol !== 'admin');
+      const card = createNoteCardFromAPI(log, true, !canEdit);
       mechanicNotesContainer.appendChild(card);
     });
   } catch (err) {
@@ -307,6 +316,7 @@ async function loadMechanicNotes(readOnly = false) {
     showToast(err.message, 'error');
   }
 }
+
 
 async function loadClientNotes() {
   try {
@@ -405,29 +415,46 @@ function closeNoteModal() {
 }
 
 async function preloadNoteSelects() {
-  // Los endpoints de clients/vehicles/logs están bajo rol:admin
-  const rol = AUTH?.user?.rol;
-  if (rol !== 'admin') {
-    // deshabilitar edición si no es admin
-    noteClientSelect.innerHTML = `<option value="">No permitido</option>`;
-    noteVehicleSelect.innerHTML = `<option value="">No permitido</option>`;
-    noteMechanicSelect.innerHTML = `<option value="">No permitido</option>`;
+  const role = getRole();
+
+  if (role === 'admin') {
+    const [clients, vehicles, mechanics] = await Promise.all([
+      apiFetch('/clients', { method: 'GET' }),
+      apiFetch('/vehicles', { method: 'GET' }),
+      apiFetch('/mechanics', { method: 'GET' }),
+    ]);
+    fillSelect(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
+    fillSelect(noteVehicleSelect, vehicles.map(v => ({
+      value: v.id, label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
+    })));
+    fillSelect(noteMechanicSelect, mechanics.map(m => ({ value: m.id, label: m.name })));
+    noteMechanicSelect.disabled = false;
+    if (noteMechanicSelect.parentElement) noteMechanicSelect.parentElement.style.display = '';
     return;
   }
 
-  const [clients, vehicles, mechanics] = await Promise.all([
-    apiFetch('/clients', { method: 'GET' }),
-    apiFetch('/vehicles', { method: 'GET' }),
-    apiFetch('/mechanics', { method: 'GET' }),
-  ]);
+  if (role === 'mechanic') {
+    const [clients, vehicles] = await Promise.all([
+      apiFetch('/lookup/clients', { method: 'GET' }),
+      apiFetch('/lookup/vehicles', { method: 'GET' }),
+    ]);
+    fillSelect(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
+    fillSelect(noteVehicleSelect, vehicles.map(v => ({
+      value: v.id, label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
+    })));
+    // ocultar select de mecánico
+    noteMechanicSelect.innerHTML = '<option value="">Se asignará automáticamente</option>';
+    noteMechanicSelect.disabled = true;
+    if (noteMechanicSelect.parentElement) noteMechanicSelect.parentElement.style.display = 'none';
+    return;
+  }
 
-  fillSelect(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
-  fillSelect(noteVehicleSelect, vehicles.map(v => ({
-    value: v.id,
-    label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
-  })));
-  fillSelect(noteMechanicSelect, mechanics.map(m => ({ value: m.id, label: m.name })));
+  fillSelect(noteClientSelect, [], 'No permitido');
+  fillSelect(noteVehicleSelect, [], 'No permitido');
+  noteMechanicSelect.innerHTML = '<option value="">No permitido</option>';
+  noteMechanicSelect.disabled = true;
 }
+
 
 function fillSelect(selectEl, items, firstLabel = 'Seleccionar') {
   selectEl.innerHTML = `<option value="">${firstLabel}</option>`;
@@ -440,45 +467,54 @@ function fillSelect(selectEl, items, firstLabel = 'Seleccionar') {
 }
 
 async function saveNote() {
-  const rol = AUTH?.user?.rol;
-  if (rol !== 'admin') {
-    showToast('No tienes permisos para crear/editar notas', 'error');
-    return;
-  }
+  const role = getRole();
 
-  const payload = {
+  const basePayload = {
     title: (noteTitleInput.value || '').trim(),
     vehicle_id: Number(noteVehicleSelect.value),
     client_id: Number(noteClientSelect.value),
-    mechanic_id: Number(noteMechanicSelect.value),
     description: (noteDescriptionInput.value || '').trim(),
   };
 
-  if (!payload.title || !payload.vehicle_id || !payload.client_id || !payload.mechanic_id || !payload.description) {
+  if (!basePayload.title || !basePayload.vehicle_id || !basePayload.client_id || !basePayload.description) {
     showToast('Completa todos los campos', 'error');
     return;
   }
 
   try {
-    if (currentNoteId) {
-      const updated = await apiFetch(`/logs/${currentNoteId}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      });
-      showToast('Nota actualizada', 'success');
+    if (role === 'admin') {
+      const payload = { ...basePayload, mechanic_id: Number(noteMechanicSelect.value) };
+      if (!payload.mechanic_id) {
+        showToast('Selecciona el mecánico', 'error');
+        return;
+      }
+      if (currentNoteId) {
+        await apiFetch(`/logs/${currentNoteId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showToast('Nota actualizada', 'success');
+      } else {
+        await apiFetch('/logs', { method: 'POST', body: JSON.stringify(payload) });
+        showToast('Nota creada', 'success');
+      }
+    } else if (role === 'mechanic') {
+      if (currentNoteId) {
+        await apiFetch(`/mechanic/logs/${currentNoteId}`, { method: 'PUT', body: JSON.stringify(basePayload) });
+        showToast('Nota actualizada', 'success');
+      } else {
+        await apiFetch('/mechanic/logs', { method: 'POST', body: JSON.stringify(basePayload) });
+        showToast('Nota creada', 'success');
+      }
     } else {
-      const created = await apiFetch('/logs', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      showToast('Nota creada', 'success');
+      showToast('No tienes permisos para crear/editar notas', 'error');
+      return;
     }
+
     closeNoteModal();
     await loadMechanicNotes(false);
   } catch (err) {
     showToast(err.message, 'error');
   }
 }
+
 
 function openDeleteModal(id) {
   notePendingDeleteId = id;
@@ -491,15 +527,19 @@ function closeDeleteModal() {
 }
 
 async function confirmDeleteNote() {
-  const rol = AUTH?.user?.rol;
-  if (rol !== 'admin') {
-    showToast('No tienes permisos para eliminar notas', 'error');
-    return;
-  }
+  const role = getRole();
   if (!notePendingDeleteId) return;
 
   try {
-    await apiFetch(`/logs/${notePendingDeleteId}`, { method: 'DELETE' });
+    if (role === 'admin') {
+      await apiFetch(`/logs/${notePendingDeleteId}`, { method: 'DELETE' });
+    } else if (role === 'mechanic') {
+      await apiFetch(`/mechanic/logs/${notePendingDeleteId}`, { method: 'DELETE' });
+    } else {
+      showToast('No tienes permisos para eliminar notas', 'error');
+      return;
+    }
+
     showToast('Nota eliminada', 'success');
     closeDeleteModal();
     await loadMechanicNotes(false);
@@ -507,6 +547,7 @@ async function confirmDeleteNote() {
     showToast(err.message, 'error');
   }
 }
+
 
 // =======================
 // Citas (Appointments)
