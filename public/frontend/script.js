@@ -4,7 +4,7 @@
 const API_BASE = '/api'; // ajusta si tu app corre en subcarpeta o dominio distinto
 let AUTH = {
   token: null,
-  user: null, // { id, name, email, rol }
+  user: null, // { id, name, email, role/rol }
 };
 
 function getRole() {
@@ -71,6 +71,17 @@ const appointmentNoticesContainer = document.getElementById('appointment-notices
 
 const toastContainer = document.getElementById('toast-container');
 
+// Filtros
+const filterClientSel   = document.getElementById('filter-client');
+const filterMechanicSel = document.getElementById('filter-mechanic');
+const filterMechanicWrap= document.getElementById('filter-mechanic-wrap');
+const filterSearchInput = document.getElementById('filter-search');
+const filtersClearBtn   = document.getElementById('filters-clear');
+
+// Estado para filtrar
+let ALL_LOGS = [];  // logs crudos desde API (admin: /logs, mechanic: /mechanic/logs)
+let LOG_FILTERS = { clientId: '', mechanicId: '', q: '' };
+
 // Calendario (si usas FullCalendar o el fallback)
 let currentCalendarDate = new Date();
 let calendarView = 'month';
@@ -124,7 +135,7 @@ function setupEventListeners() {
   if (cancelAppointmentBtn) cancelAppointmentBtn.addEventListener('click', closeAppointmentModal);
   if (saveAppointmentBtn) saveAppointmentBtn.addEventListener('click', saveAppointment);
 
-  // campanita cliente: opcional (se mantiene pero datos vendrán de API si existiera endpoint)
+  // campanita cliente (opcional)
   const bellContainer = document.getElementById('bell-container');
   if (bellContainer) {
     bellContainer.addEventListener('click', openClientNotifModal);
@@ -133,6 +144,45 @@ function setupEventListeners() {
   const closeNotifBtn = document.getElementById('close-notif-btn');
   if (notifModalClose) notifModalClose.addEventListener('click', closeClientNotifModal);
   if (closeNotifBtn) closeNotifBtn.addEventListener('click', closeClientNotifModal);
+
+  // Filtros
+  function setupFiltersListeners() {
+    if (filterClientSel) {
+      filterClientSel.addEventListener('change', () => {
+        LOG_FILTERS.clientId = filterClientSel.value || '';
+        renderMechanicNotes();
+      });
+    }
+
+    if (filterMechanicSel) {
+      filterMechanicSel.addEventListener('change', () => {
+        LOG_FILTERS.mechanicId = filterMechanicSel.value || '';
+        renderMechanicNotes();
+      });
+    }
+
+    if (filterSearchInput) {
+      let t;
+      filterSearchInput.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          LOG_FILTERS.q = (filterSearchInput.value || '').trim().toLowerCase();
+          renderMechanicNotes();
+        }, 200); // debounce
+      });
+    }
+
+    if (filtersClearBtn) {
+      filtersClearBtn.addEventListener('click', () => {
+        LOG_FILTERS = { clientId: '', mechanicId: '', q: '' };
+        if (filterClientSel)   filterClientSel.value = '';
+        if (filterMechanicSel) filterMechanicSel.value = '';
+        if (filterSearchInput) filterSearchInput.value = '';
+        renderMechanicNotes();
+      });
+    }
+  }
+  setupFiltersListeners();
 }
 
 // =======================
@@ -159,6 +209,7 @@ async function handleLogin(e) {
     AUTH.token = data.token;
     AUTH.user = data.user;
 
+    // normaliza role/rol
     AUTH.user.role = AUTH.user.role || AUTH.user.rol;
     AUTH.user.rol  = AUTH.user.rol  || AUTH.user.role;
 
@@ -198,13 +249,11 @@ async function handleLogout() {
 function routeByRole() {
   const rol = AUTH?.user?.rol;
   if (rol === 'admin') {
-    showMechanicDashboard(); // “Panel Mecánico” lo dejamos como panel admin/operador
+    showMechanicDashboard(); // lo usamos como panel operativo (admin)
   } else if (rol === 'client') {
     showClientDashboard();
   } else if (rol === 'mechanic') {
-    // IMPORTANTE: según tu api.php, los CRUD de logs/appointments requieren rol:admin.
-    // Así que solo mostraremos vistas de lectura permitidas para mechanic.
-    showMechanicDashboard(true); // modo lectura/restringido
+    showMechanicDashboard(true); // modo con permisos del mecánico
   } else {
     showLogin();
   }
@@ -239,15 +288,21 @@ function hideAllScreens() {
 async function showMechanicDashboard(readOnly = false) {
   hideAllScreens();
   mechanicDashboard?.classList.add('active');
-  // Cargamos notas/logs
+
+  // 1) Carga logs desde la API y guarda en ALL_LOGS
   await loadMechanicNotes(readOnly);
+
+  // 2) Llena selects de filtros (usa ALL_LOGS si hace falta)
+  await populateFilterOptions();
+
+  // 3) Pinta según filtros actuales
+  renderMechanicNotes();
 }
 
 async function showClientDashboard() {
   hideAllScreens();
   clientDashboard?.classList.add('active');
   await loadClientNotes();
-  // Opcional: clientAppointmentNotices -> no hay endpoint específico en tu backend para citas del cliente
   clientAppointmentNotices?.style && (clientAppointmentNotices.style.display = 'none');
 }
 
@@ -276,15 +331,14 @@ async function apiFetch(path, options = {}) {
     } catch (_) {}
     throw new Error(msg);
   }
-  // 204 No Content
-  if (res.status === 204) return null;
+  if (res.status === 204) return null; // 204 No Content
   return res.json();
 }
 
 // =======================
 // Logs (Notas)
 // =======================
-async function loadMechanicNotes(readOnly = false) {
+async function loadMechanicNotes(/*readOnly*/) {
   try {
     const role = getRole();
     let logs = [];
@@ -297,30 +351,19 @@ async function loadMechanicNotes(readOnly = false) {
       logs = [];
     }
 
-    mechanicNotesContainer.innerHTML = '';
-    if (!logs || logs.length === 0) {
-      emptyNotes.style.display = 'block';
-      return;
-    }
-    emptyNotes.style.display = 'none';
+    // Guarda para filtrar/buscar
+    ALL_LOGS = Array.isArray(logs) ? logs : [];
 
-    // mecánico puede editar/borrar SUS logs
-    const canEdit = (role === 'admin') || (role === 'mechanic');
-    logs.forEach(log => {
-      const card = createNoteCardFromAPI(log, true, !canEdit);
-      mechanicNotesContainer.appendChild(card);
-    });
   } catch (err) {
+    ALL_LOGS = [];
     mechanicNotesContainer.innerHTML = '';
     emptyNotes.style.display = 'block';
     showToast(err.message, 'error');
   }
 }
 
-
 async function loadClientNotes() {
   try {
-    // /api/my-logs accesible a roles client y mechanic
     const logs = await apiFetch('/my-logs', { method: 'GET' });
     clientNotesContainer.innerHTML = '';
 
@@ -342,11 +385,10 @@ async function loadClientNotes() {
 }
 
 function createNoteCardFromAPI(log, isMechanicView, readOnly) {
-  // log: { id, title, description, client, vehicle, mechanic }
   const card = document.createElement('div');
   card.className = 'note-card';
 
-  const withRel = log; // viene con relaciones por with('client','vehicle','mechanic')
+  const withRel = log;
   const clientName = withRel?.client?.name || withRel?.client?.email || `#${withRel?.client_id}`;
   const vehicleLabel = withRel?.vehicle
     ? `${withRel.vehicle.brand} ${withRel.vehicle.model} (${withRel.vehicle.year}) - ${withRel.vehicle.plate}`
@@ -410,6 +452,11 @@ function openEditNoteModal(log) {
   noteModal.classList.add('active');
 }
 
+// alias que usa la vista filtrada
+function openEditNoteModalFromLog(log) {
+  openEditNoteModal(log);
+}
+
 function closeNoteModal() {
   noteModal.classList.remove('active');
 }
@@ -423,40 +470,41 @@ async function preloadNoteSelects() {
       apiFetch('/vehicles', { method: 'GET' }),
       apiFetch('/mechanics', { method: 'GET' }),
     ]);
-    fillSelect(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
-    fillSelect(noteVehicleSelect, vehicles.map(v => ({
+    fillSelectOptions(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
+    fillSelectOptions(noteVehicleSelect, vehicles.map(v => ({
       value: v.id, label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
     })));
-    fillSelect(noteMechanicSelect, mechanics.map(m => ({ value: m.id, label: m.name })));
+    fillSelectOptions(noteMechanicSelect, mechanics.map(m => ({ value: m.id, label: m.name })));
     noteMechanicSelect.disabled = false;
     if (noteMechanicSelect.parentElement) noteMechanicSelect.parentElement.style.display = '';
     return;
   }
 
   if (role === 'mechanic') {
+    // estos endpoints deben estar expuestos en tu api.php bajo role:mechanic
     const [clients, vehicles] = await Promise.all([
       apiFetch('/lookup/clients', { method: 'GET' }),
       apiFetch('/lookup/vehicles', { method: 'GET' }),
     ]);
-    fillSelect(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
-    fillSelect(noteVehicleSelect, vehicles.map(v => ({
+    fillSelectOptions(noteClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
+    fillSelectOptions(noteVehicleSelect, vehicles.map(v => ({
       value: v.id, label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
     })));
-    // ocultar select de mecánico
+    // ocultar select de mecánico (lo asigna el servidor)
     noteMechanicSelect.innerHTML = '<option value="">Se asignará automáticamente</option>';
     noteMechanicSelect.disabled = true;
     if (noteMechanicSelect.parentElement) noteMechanicSelect.parentElement.style.display = 'none';
     return;
   }
 
-  fillSelect(noteClientSelect, [], 'No permitido');
-  fillSelect(noteVehicleSelect, [], 'No permitido');
+  fillSelectOptions(noteClientSelect, [], 'No permitido');
+  fillSelectOptions(noteVehicleSelect, [], 'No permitido');
   noteMechanicSelect.innerHTML = '<option value="">No permitido</option>';
   noteMechanicSelect.disabled = true;
 }
 
-
-function fillSelect(selectEl, items, firstLabel = 'Seleccionar') {
+function fillSelectOptions(selectEl, items, firstLabel = 'Seleccionar') {
+  if (!selectEl) return;
   selectEl.innerHTML = `<option value="">${firstLabel}</option>`;
   items.forEach(it => {
     const opt = document.createElement('option');
@@ -510,11 +558,11 @@ async function saveNote() {
 
     closeNoteModal();
     await loadMechanicNotes(false);
+    renderMechanicNotes();
   } catch (err) {
     showToast(err.message, 'error');
   }
 }
-
 
 function openDeleteModal(id) {
   notePendingDeleteId = id;
@@ -543,11 +591,156 @@ async function confirmDeleteNote() {
     showToast('Nota eliminada', 'success');
     closeDeleteModal();
     await loadMechanicNotes(false);
+    renderMechanicNotes();
   } catch (err) {
     showToast(err.message, 'error');
   }
 }
 
+// =======================
+// Render (filtros/búsqueda)
+// =======================
+async function populateFilterOptions() {
+  const role = getRole();
+
+  if (filterMechanicWrap) {
+    filterMechanicWrap.style.display = (role === 'admin') ? '' : 'none';
+  }
+
+  try {
+    // CLIENTES
+    let clients = [];
+    if (role === 'admin') {
+      clients = await apiFetch('/clients', { method: 'GET' });
+    } else if (role === 'mechanic') {
+      // si no hay endpoint de lookup, construimos desde ALL_LOGS
+      try {
+        clients = await apiFetch('/lookup/clients', { method: 'GET' });
+      } catch (_) {
+        const map = new Map();
+        ALL_LOGS.forEach(l => { if (l.client) map.set(l.client.id, l.client); });
+        clients = Array.from(map.values());
+      }
+    }
+    if (filterClientSel) {
+      fillSelectFilter(filterClientSel, [{id:'', name:'Todos'}].concat(clients), (c)=>c.id, (c)=>`${c.name}`);
+    }
+  } catch (_) {
+    if (filterClientSel) filterClientSel.innerHTML = `<option value="">Todos</option>`;
+  }
+
+  // MECÁNICOS (solo admin)
+  if (getRole() === 'admin' && filterMechanicSel) {
+    try {
+      const mechs = await apiFetch('/mechanics', { method: 'GET' });
+      fillSelectFilter(filterMechanicSel, [{id:'', name:'Todos'}].concat(mechs), (m)=>m.id, (m)=>m.name);
+    } catch (_) {
+      filterMechanicSel.innerHTML = `<option value="">Todos</option>`;
+    }
+  }
+}
+
+function fillSelectFilter(selectEl, items, getVal, getLabel) {
+  if (!selectEl) return;
+  selectEl.innerHTML = '';
+  items.forEach(it => {
+    const opt = document.createElement('option');
+    opt.value = typeof getVal === 'function' ? getVal(it) : it.id;
+    opt.textContent = typeof getLabel === 'function' ? getLabel(it) : it.name;
+    selectEl.appendChild(opt);
+  });
+}
+
+function renderMechanicNotes() {
+  const role = getRole();
+  const container = mechanicNotesContainer;
+  container.innerHTML = '';
+
+  const byClient   = LOG_FILTERS.clientId;
+  const byMechanic = LOG_FILTERS.mechanicId;
+  const q          = LOG_FILTERS.q;
+
+  let filtered = ALL_LOGS.slice();
+
+  if (byClient) {
+    filtered = filtered.filter(l =>
+      String(l.client_id) === String(byClient) || String(l?.client?.id) === String(byClient)
+    );
+  }
+  if (byMechanic && role === 'admin') {
+    filtered = filtered.filter(l =>
+      String(l.mechanic_id) === String(byMechanic) || String(l?.mechanic?.id) === String(byMechanic)
+    );
+  }
+  if (q) {
+    filtered = filtered.filter(l => matchesQuery(l, q));
+  }
+
+  if (filtered.length === 0) {
+    emptyNotes.style.display = 'block';
+    return;
+  }
+  emptyNotes.style.display = 'none';
+
+  filtered.forEach(log => {
+    const card = buildLogCard(log, role);
+    container.appendChild(card);
+  });
+}
+
+// Búsqueda: título, descripción, cliente, mecánico, vehículo (brand/model/plate)
+function matchesQuery(log, q) {
+  const hay = (s) => (s || '').toString().toLowerCase().includes(q);
+
+  return (
+    hay(log.title) ||
+    hay(log.description) ||
+    hay(log?.client?.name) ||
+    hay(log?.mechanic?.name) ||
+    hay([log?.vehicle?.brand, log?.vehicle?.model, log?.vehicle?.plate].filter(Boolean).join(' '))
+  );
+}
+
+function buildLogCard(log, role) {
+  const card = document.createElement('div');
+  card.className = 'note-card';
+
+  const v = log.vehicle || {};
+  const c = log.client || {};
+  const m = log.mechanic || {};
+
+  card.innerHTML = `
+    <h3 class="note-title">${escapeHTML(log.title)}</h3>
+    <p class="note-detail"><i class="fas fa-car"></i> <span>Vehículo:</span> ${[
+      v.brand, v.model, v.year ? `(${v.year})` : '', v.plate ? `- ${v.plate}` : ''
+    ].filter(Boolean).join(' ')}</p>
+    <p class="note-detail"><i class="fas fa-user"></i> <span>Cliente:</span> ${escapeHTML(c.name || `#${log.client_id}`)}</p>
+    <p class="note-detail"><i class="fas fa-user-cog"></i> <span>Mecánico:</span> ${escapeHTML(m.name || `#${log.mechanic_id}`)}</p>
+    <p class="note-detail"><i class="fas fa-align-left"></i> <span>Descripción:</span> ${escapeHTML(log.description || '')}</p>
+  `;
+
+  const canEdit = (role === 'admin' || role === 'mechanic');
+  if (canEdit) {
+    const actions = document.createElement('div');
+    actions.className = 'note-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-action btn-edit';
+    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+    editBtn.addEventListener('click', () => openEditNoteModal(log));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-action btn-delete';
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+    deleteBtn.addEventListener('click', () => openDeleteModal(log.id));
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    card.appendChild(actions);
+  }
+
+  return card;
+}
 
 // =======================
 // Citas (Appointments)
@@ -559,7 +752,7 @@ function openAddAppointmentModal() {
   const now = new Date();
   const tzOffset = now.getTimezoneOffset();
   const local = new Date(now.getTime() - tzOffset * 60000).toISOString().slice(0, 16);
-  appointmentDateInput.min = local;
+  if (appointmentDateInput) appointmentDateInput.min = local;
 
   preloadAppointmentSelects().finally(() => {
     appointmentModal.classList.add('active');
@@ -573,8 +766,8 @@ function closeAppointmentModal() {
 async function preloadAppointmentSelects() {
   const rol = AUTH?.user?.rol;
   if (rol !== 'admin') {
-    fillSelect(appointmentClientSelect, [], 'No permitido');
-    fillSelect(appointmentVehicleSelect, [], 'No permitido');
+    fillSelectOptions(appointmentClientSelect, [], 'No permitido');
+    fillSelectOptions(appointmentVehicleSelect, [], 'No permitido');
     return;
   }
 
@@ -583,8 +776,8 @@ async function preloadAppointmentSelects() {
     apiFetch('/vehicles', { method: 'GET' }),
   ]);
 
-  fillSelect(appointmentClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
-  fillSelect(appointmentVehicleSelect, vehicles.map(v => ({
+  fillSelectOptions(appointmentClientSelect, clients.map(c => ({ value: c.id, label: `${c.name} (${c.email})` })));
+  fillSelectOptions(appointmentVehicleSelect, vehicles.map(v => ({
     value: v.id,
     label: `${v.brand} ${v.model} ${v.year} - ${v.plate} [Cliente #${v.client_id}]`
   })));
@@ -599,10 +792,10 @@ async function saveAppointment() {
 
   const editingId = appointmentForm.dataset.editingId;
   const payload = {
-    title: (appointmentTitleInput.value || '').trim(),
-    client_id: Number(appointmentClientSelect.value),
-    vehicle_id: Number(appointmentVehicleSelect.value),
-    scheduled_at: appointmentDateInput.value, // datetime-local
+    title: (appointmentTitleInput?.value || '').trim(),
+    client_id: Number(appointmentClientSelect?.value),
+    vehicle_id: Number(appointmentVehicleSelect?.value),
+    scheduled_at: appointmentDateInput?.value,
   };
 
   if (!payload.title || !payload.client_id || !payload.vehicle_id || !payload.scheduled_at) {
@@ -639,13 +832,12 @@ async function editAppointment(appointmentId) {
   try {
     const appt = await apiFetch(`/appointments/${appointmentId}`, { method: 'GET' });
     await preloadAppointmentSelects();
-    appointmentTitleInput.value = appt.title || '';
-    appointmentClientSelect.value = String(appt.client_id);
-    appointmentVehicleSelect.value = String(appt.vehicle_id);
-    // convertir a local yyyy-MM-ddTHH:mm
+    if (appointmentTitleInput) appointmentTitleInput.value = appt.title || '';
+    if (appointmentClientSelect) appointmentClientSelect.value = String(appt.client_id);
+    if (appointmentVehicleSelect) appointmentVehicleSelect.value = String(appt.vehicle_id);
     const dt = new Date(appt.scheduled_at);
     const localISO = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    appointmentDateInput.value = localISO;
+    if (appointmentDateInput) appointmentDateInput.value = localISO;
 
     appointmentForm.dataset.editingId = appointmentId;
     appointmentModal.classList.add('active');
@@ -674,10 +866,8 @@ async function deleteAppointment(appointmentId) {
 async function initializeCalendar() {
   const calendarEl = document.getElementById('calendar');
 
-  // Carga eventos desde API
   const events = await loadAppointmentsForCalendar();
 
-  // Si existe FullCalendar, úsalo
   try {
     if (typeof FullCalendar !== 'undefined') {
       if (calendarEl.classList.contains('fc')) {
@@ -703,7 +893,6 @@ async function initializeCalendar() {
       cal.render();
       calendarEl._calendar = cal;
 
-      // Oculta el calendario custom
       document.getElementById('custom-calendar').style.display = 'none';
       calendarEl.style.display = 'block';
       return;
@@ -716,16 +905,14 @@ async function initializeCalendar() {
 
 async function loadAppointmentsForCalendar() {
   const rol = AUTH?.user?.rol;
-  if (rol !== 'admin') return []; // solo admin puede listar citas (según api.php)
+  if (rol !== 'admin') return []; // solo admin puede listar citas
 
   const appts = await apiFetch('/appointments', { method: 'GET' });
-  return appts.map(a => {
-    return {
-      id: String(a.id),
-      title: `${a.title} – Cliente #${a.client_id}`,
-      start: a.scheduled_at
-    };
-  });
+  return appts.map(a => ({
+    id: String(a.id),
+    title: `${a.title} – Cliente #${a.client_id}`,
+    start: a.scheduled_at
+  }));
 }
 
 // ---------- Calendario custom (fallback) ----------
@@ -733,7 +920,6 @@ function initializeCustomCalendar(events = []) {
   document.getElementById('calendar').style.display = 'none';
   document.getElementById('custom-calendar').style.display = 'block';
 
-  // Controles
   const prevBtn = document.getElementById('prev-btn');
   const nextBtn = document.getElementById('next-btn');
   const todayBtn = document.getElementById('today-btn');
@@ -746,7 +932,6 @@ function initializeCustomCalendar(events = []) {
   monthViewBtn.onclick = () => switchView('month');
   weekViewBtn.onclick = () => switchView('week');
 
-  // Render
   updateCalendarView(events);
 }
 
@@ -823,7 +1008,6 @@ function renderMonthView(events = []) {
       eventEl.title = ev.title;
       eventEl.dataset.id = ev.id;
 
-      // Acciones compactas
       const actions = document.createElement('span');
       actions.className = 'calendar-actions';
 
@@ -979,7 +1163,6 @@ function switchView(view) {
 // Notificaciones Cliente (UI)
 // =======================
 function openClientNotifModal() {
-  // No hay endpoint de citas por cliente; mostramos modal vacío.
   const notifModal = document.getElementById('notif-modal');
   const list = document.getElementById('client-appointments-list');
   if (list) list.innerHTML = '<p>No hay información de citas disponible.</p>';

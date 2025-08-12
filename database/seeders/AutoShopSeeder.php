@@ -30,7 +30,7 @@ class AutoShopSeeder extends Seeder
         // ===== 2) MECÁNICOS (users + mechanics) =====
         $mechanicUsers = [];
         $mechanicIds = [];
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             $u = User::create([
                 'name'     => $faker->name(),
                 'email'    => "mechanic{$i}@example.com",
@@ -48,7 +48,7 @@ class AutoShopSeeder extends Seeder
         // ===== 3) CLIENTES (users + clients) =====
         $clientUsers = [];
         $clientIds = [];
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 30; $i++) {
             $name  = $faker->name();
             $email = "client{$i}@example.com";
 
@@ -70,7 +70,7 @@ class AutoShopSeeder extends Seeder
             $clientIds[]   = $c->id;
         }
 
-        // ===== 4) VEHÍCULOS (50) repartidos entre 10 clientes =====
+        // ===== 4) VEHÍCULOS (100) repartidos entre 30 clientes =====
         $brandsModels = [
             'Nissan' => ['Versa','Sentra','March','Altima','Kicks'],
             'Toyota' => ['Corolla','Yaris','Camry','RAV4','Hilux'],
@@ -86,7 +86,7 @@ class AutoShopSeeder extends Seeder
         $clientVehicles = []; // client_id => [vehicle_ids]
         foreach ($clientIds as $cid) { $clientVehicles[$cid] = []; }
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             // repartir de forma “uniforme”: 5 por cliente aprox.
             $clientId = $clientIds[$i % count($clientIds)];
 
@@ -132,14 +132,14 @@ class AutoShopSeeder extends Seeder
             }
         }
 
-        // ===== 5) APPOINTMENTS (50) coherentes =====
+        // ===== 5) APPOINTMENTS (100) coherentes =====
         $apptTitles = [
             'Servicio General', 'Cambio de Aceite', 'Revisión de Frenos',
             'Diagnóstico Motor', 'Alineación y Balanceo', 'Cambio de Batería',
             'Afinación', 'Cambio de Filtros', 'Revisión Eléctrica', 'Inspección General'
         ];
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             // elige cliente y uno de sus vehículos
             $clientId = $clientIds[array_rand($clientIds)];
             $vehicleList = $clientVehicles[$clientId];
@@ -158,14 +158,14 @@ class AutoShopSeeder extends Seeder
             ]);
         }
 
-        // ===== 6) LOGS (50) coherentes =====
+        // ===== 6) LOGS (100) coherentes =====
         $logTitles = [
             'Diagnóstico inicial', 'Reemplazo de pastillas', 'Cambio de bujías',
             'Falla intermitente', 'Revisión de suspensión', 'Fuga de aceite',
             'Chequeo de batería', 'Cambio de filtro de aire', 'Ajuste de banda', 'Revisión de escape'
         ];
 
-        for ($i = 0; $i < 50; $i++) {
+        for ($i = 0; $i < 100; $i++) {
             $clientId = $clientIds[array_rand($clientIds)];
             $vehicleList = $clientVehicles[$clientId];
             $vehicleId = $vehicleList[array_rand($vehicleList)];

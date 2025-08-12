@@ -54,6 +54,34 @@
 
     <div class="content">
       <div class="container">
+        <!-- Filtros de logs (solo panel mecánico) -->
+        <div class="filters-bar" id="logs-filters">
+          <div class="filters-row">
+            <div class="filter-group">
+              <label for="filter-client">Cliente</label>
+              <select id="filter-client">
+                <option value="">Todos</option>
+              </select>
+            </div>
+
+            <!-- Visible solo para ADMIN -->
+            <div class="filter-group" id="filter-mechanic-wrap">
+              <label for="filter-mechanic">Mecánico</label>
+              <select id="filter-mechanic">
+                <option value="">Todos</option>
+              </select>
+            </div>
+
+            <div class="filter-group filter-search">
+              <label for="filter-search">Buscar</label>
+              <input type="search" id="filter-search" placeholder="Título, descripción, vehículo, cliente...">
+            </div>
+
+            <div class="filter-actions">
+              <button id="filters-clear" class="btn-logout">Limpiar</button>
+            </div>
+          </div>
+        </div>
         <div id="mechanic-notes-container" class="notes-grid">
           <!-- Notes will be loaded here -->
         </div>

@@ -994,3 +994,48 @@
 .calendar-event.confirmed .calendar-action-btn.edit-btn:focus {
   color: #3498db !important;
 }
+
+.filters-bar {
+  background: rgba(27,16,16,0.8);
+  border: 1px solid rgba(219,192,195,0.12);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: .5rem;
+}
+
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-group label {
+  display: block;
+  font-size: .9rem;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.filter-group select,
+.filter-group input[type="search"] {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.2);
+  color: var(--color-text);
+  border: 1px solid rgba(219,192,195,0.3);
+  border-radius: 8px;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@media (max-width: 900px) {
+  .filters-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .filters-row { grid-template-columns: 1fr; }
+}
