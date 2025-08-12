@@ -1,0 +1,996 @@
+:root {
+      --color-primary: #AA1620;
+      --color-primary-light: #c01e28;
+      --color-secondary: #640E19;
+      --color-background-from: #1B1010;
+      --color-background-to: #2E1518;
+      --color-text: #DBC0C3;
+      --color-text-dark: #a09092;
+      --color-error: #ff4c4c;
+      --color-success: #4caf50;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--color-background-from), var(--color-background-to));
+      color: var(--color-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    /* Login */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-card {
+      background-color: rgba(27, 16, 16, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      padding: 2.5rem;
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(219, 192, 195, 0.2);
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .login-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo h1 {
+      color: var(--color-text);
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .login-logo i {
+      font-size: 3rem;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--color-text);
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(219, 192, 195, 0.3);
+      border-radius: 8px;
+      color: var(--color-text);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(170, 22, 32, 0.25);
+    }
+
+    .form-control::placeholder {
+      color: var(--color-text-dark);
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 41px;
+      right: 12px;
+      color: var(--color-text-dark);
+      cursor: pointer;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-light);
+    }
+
+    .btn-secondary {
+      background-color: var(--color-secondary);
+      color: white;
+    }
+
+    /* Ripple effect */
+    .btn::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10, 10);
+      opacity: 0;
+      transition: transform .5s, opacity 1s;
+    }
+
+    .btn:active::after {
+      transform: scale(0, 0);
+      opacity: 0.3;
+      transition: 0s;
+    }
+
+    /* Dashboard */
+    .header {
+      background-color: rgba(27, 16, 16, 0.95);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 1rem;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--color-primary);
+      color: var(--color-text);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-logout:hover {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    .content {
+      padding: 2rem 0;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .note-card {
+      background-color: rgba(27, 16, 16, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border: 1px solid rgba(219, 192, 195, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .note-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      border-color: rgba(219, 192, 195, 0.3);
+    }
+
+    .note-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 1rem;
+    }
+
+    .note-detail {
+      margin-bottom: 0.5rem;
+      color: var(--color-text-dark);
+    }
+
+    .note-detail span {
+      color: var(--color-text);
+      font-weight: 500;
+    }
+
+    .note-actions {
+      margin-top: 1.2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.8rem;
+    }
+
+    .btn-action {
+      background-color: transparent;
+      border: none;
+      color: var(--color-text-dark);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-edit:hover {
+      color: #3498db;
+    }
+
+    .btn-delete:hover {
+      color: #e74c3c;
+    }
+
+    .fab-button {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 60px;
+      height: 60px;
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 12px rgba(170, 22, 32, 0.4);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .fab-button:hover {
+      background-color: var(--color-primary-light);
+      box-shadow: 0 6px 16px rgba(170, 22, 32, 0.5), 0 0 0 15px rgba(170, 22, 32, 0.1);
+      transform: translateY(-5px);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background-color: rgba(27, 16, 16, 0.95);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      padding: 2rem;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(219, 192, 195, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(219, 192, 195, 0.1);
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--color-text-dark);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--color-text);
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .btn-modal {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .btn-cancel {
+      background-color: transparent;
+      border: 1px solid var(--color-text-dark);
+      color: var(--color-text);
+    }
+
+    .btn-cancel:hover {
+      background-color: rgba(219, 192, 195, 0.1);
+    }
+
+    /* Credentials Modal */
+    .credentials-box {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      border: 1px solid rgba(219, 192, 195, 0.2);
+    }
+
+    .credential-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .credential-label {
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .credential-value {
+      color: var(--color-primary-light);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .toast {
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      margin-bottom: 10px;
+      min-width: 250px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease forwards;
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    .toast.success {
+      background-color: var(--color-success);
+    }
+
+    .toast.error {
+      background-color: var(--color-error);
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOut {
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--color-text-dark);
+      margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+      color: var(--color-text);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+      color: var(--color-text-dark);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0.5rem;
+      }
+      
+      .login-card {
+        padding: 1.5rem;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+      }
+
+      .fab-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        bottom: 1.5rem;
+        right: 1.5rem;
+      }
+
+      .modal {
+        padding: 1.5rem;
+      }
+    }
+
+    /* New mobile-specific responsiveness */
+    @media (max-width: 600px) {
+      html {
+        font-size: 16px;
+      }
+      
+      .notes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+      
+      .note-card {
+        padding: 1.5rem !important;
+        border-radius: 10px;
+      }
+      
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .btn-logout {
+        align-self: stretch;
+        text-align: center;
+        margin-top: 0.5rem;
+      }
+      
+      .modal {
+        width: 95% !important;
+        padding: 1rem !important;
+      }
+      
+      .form-control {
+        font-size: 1.1rem !important;
+      }
+      
+      .fab-button {
+        bottom: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* Animation for screen transitions */
+    .screen {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      position: relative;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Add styles for calendar container */
+    .calendar-container {
+      background-color: rgba(27, 16, 16, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border: 1px solid rgba(219, 192, 195, 0.1);
+      margin-bottom: 2rem;
+    }
+
+    /* Calendar specific styles */
+    .fc .fc-toolbar-title {
+      color: var(--color-text);
+    }
+    
+    .fc .fc-button {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    
+    .fc .fc-button:hover {
+      background-color: var(--color-primary-light);
+      border-color: var(--color-primary-light);
+    }
+    
+    .fc .fc-daygrid-day-number,
+    .fc .fc-col-header-cell-cushion {
+      color: var(--color-text);
+    }
+    
+    .fc-theme-standard td, 
+    .fc-theme-standard th,
+    .fc-theme-standard .fc-scrollgrid {
+      border-color: rgba(219, 192, 195, 0.2);
+    }
+    
+    .fc-daygrid-day {
+      background-color: rgba(27, 16, 16, 0.5);
+    }
+
+    /* Appointment notice section */
+    .appointment-notices {
+      background-color: rgba(27, 16, 16, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border: 1px solid rgba(219, 192, 195, 0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .appointment-notice {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(219, 192, 195, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .appointment-notice:last-child {
+      border-bottom: none;
+    }
+    
+    .appointment-details {
+      flex: 1;
+    }
+    
+    .appointment-date {
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .appointment-cost {
+      color: var(--color-text-dark);
+    }
+    
+    .btn-appointment {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+    }
+
+    /* Custom Calendar Styles */
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .calendar-navigation {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .calendar-title {
+      font-size: 1.2rem;
+      color: var(--color-text);
+      margin: 0 10px;
+    }
+
+    .calendar-view-toggle {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-calendar {
+      background-color: rgba(27, 16, 16, 0.8);
+      border: 1px solid var(--color-primary);
+      color: var(--color-text);
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-calendar.active {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    .btn-calendar:hover {
+      background-color: var(--color-primary-light);
+      color: white;
+    }
+
+    .custom-calendar {
+      width: 100%;
+      border: 1px solid rgba(219, 192, 195, 0.2);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background-color: var(--color-secondary);
+      color: var(--color-text);
+      font-weight: 500;
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .calendar-header div {
+      padding: 5px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-gap: 1px;
+      background-color: rgba(219, 192, 195, 0.1);
+    }
+
+    .calendar-day {
+      min-height: 100px;
+      background-color: rgba(27, 16, 16, 0.8);
+      padding: 5px;
+      position: relative;
+    }
+
+    .calendar-day.inactive {
+      opacity: 0.5;
+      background-color: rgba(27, 16, 16, 0.5);
+    }
+
+    .day-number {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+
+    .calendar-event {
+      background-color: var(--color-primary);
+      color: white;
+      border-radius: 3px;
+      padding: 3px 5px;
+      font-size: 0.8rem;
+      margin-bottom: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-event.confirmed {
+      background-color: var(--color-success);
+    }
+
+    .calendar-event.confirmed i {
+        margin-right: 4px;
+        color: #4caf50;
+    }
+
+    /* Mobile responsiveness for calendar */
+    @media (max-width: 768px) {
+      .calendar-header {
+        grid-template-columns: repeat(7, 1fr);
+      }
+      
+      .calendar-grid.week-view {
+        grid-template-columns: repeat(7, 1fr);
+      }
+      
+      .calendar-grid.month-view {
+        grid-template-columns: repeat(7, 1fr);
+      }
+      
+      .calendar-day {
+        min-height: 60px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .calendar-controls {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+      }
+      
+      .calendar-view-toggle {
+        justify-content: center;
+      }
+      
+      .calendar-navigation {
+        justify-content: space-between;
+      }
+      
+      .calendar-grid.month-view {
+        display: flex;
+        flex-direction: column;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+      
+      .calendar-grid.month-view .calendar-day {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      
+      .calendar-grid.month-view .day-number {
+        width: 30px;
+        text-align: center;
+      }
+      
+      .calendar-grid.month-view .day-events {
+        flex: 1;
+      }
+    }
+
+    /* Calendar Today Highlight */
+    .calendar-day.today { 
+        border: 2px solid #ff4c4c; 
+        box-shadow: inset 0 0 10px rgba(255,76,76,0.15);
+    }
+
+    /* Improve Client Select Colors */
+    #appointment-client {
+        background-color: rgba(27,16,16,0.9);
+        color: var(--color-text);
+        border: 1px solid var(--color-primary);
+    }
+    #appointment-client option {
+        background: var(--color-background-from);
+        color: var(--color-text);
+    }
+    #appointment-client:focus {
+        border-color: var(--color-primary-light);
+        box-shadow: 0 0 0 3px rgba(170,22,32,0.25);
+    }
+
+    /* Client Notification Bell & Panel */
+    .bell-container {
+        position: relative;
+        margin-right: 15px;
+        cursor: pointer;
+    }
+
+    #notif-bell {
+        font-size: 1.2rem;
+        color: var(--color-text);
+    }
+
+    .bell-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 10px;
+        height: 10px;
+        background-color: var(--color-primary);
+        border-radius: 50%;
+    }
+
+    .notif-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .notif-modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .notif-modal {
+        background-color: rgba(27, 16, 16, 0.95);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        padding: 2rem;
+        transform: translateY(20px);
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(219, 192, 195, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .notif-modal-overlay.active .notif-modal {
+        transform: translateY(0);
+    }
+
+    .client-calendar-container {
+        margin-top: 1.5rem;
+    }
+
+    /* Compact calendar action buttons */
+.calendar-actions {
+  float: right;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.calendar-action-btn {
+  background: rgba(219,192,195,0.10);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dark);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s, color 0.2s;
+  padding: 0;
+  margin: 0;
+}
+
+.calendar-action-btn:hover {
+  background: rgba(219,192,195,0.25);
+  color: var(--color-primary);
+}
+
+.calendar-action-btn.delete-btn:hover {
+  color: var(--color-error);
+}
+
+.calendar-action-btn.edit-btn:hover {
+  color: #3498db;
+}
+
+/* Forzar color blanco en iconos de acciones cuando la cita está confirmada */
+.calendar-event.confirmed .calendar-action-btn,
+.calendar-event.confirmed .calendar-action-btn i {
+  color: #fff !important;
+}
+
+.calendar-event.confirmed .calendar-action-btn:hover,
+.calendar-event.confirmed .calendar-action-btn:focus {
+  color: var(--color-primary) !important;
+  background: rgba(219,192,195,0.25);
+}
+
+.calendar-event.confirmed .calendar-action-btn.delete-btn:hover,
+.calendar-event.confirmed .calendar-action-btn.delete-btn:focus {
+  color: var(--color-error) !important;
+}
+
+.calendar-event.confirmed .calendar-action-btn.edit-btn:hover,
+.calendar-event.confirmed .calendar-action-btn.edit-btn:focus {
+  color: #3498db !important;
+}
