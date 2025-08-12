@@ -11,30 +11,30 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MechanicController;
 
+// API Routes
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+// Login route
 Route::post('/login', [AuthController::class, 'login']);
 
+// Admin specific routes
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('vehicles', VehicleController::class);
-   //citas
     Route::apiResource('appointments', AppointmentController::class);
     Route::apiResource('logs', LogController::class);
 });
 
+// Logs view for clients and mechanics
 Route::middleware(['auth:sanctum', 'role:client,mechanic'])->group(function () {
     Route::get('/my-logs', [LogController::class, 'clientLogs']);
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::apiResource('mechanics', MechanicController::class);
-});
-
+// Mechanic specific routes
 Route::middleware(['auth:sanctum', 'role:mechanic'])->group(function () {
     Route::get('/mechanic/logs', [LogController::class, 'mechanicLogs']);
     Route::get('/mechanic/logs/{id}', [LogController::class, 'mechanicShow']);
@@ -45,4 +45,8 @@ Route::middleware(['auth:sanctum', 'role:mechanic'])->group(function () {
 
     Route::get('/lookup/clients', [ClientController::class, 'index']);
     Route::get('/lookup/vehicles', [VehicleController::class, 'index']);
+});
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('mechanics', MechanicController::class);
 });
