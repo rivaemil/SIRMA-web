@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: autoservice-monolith
+    env: docker
+    plan: free
+    autoDeploy: true
+    # Render inyecta $PORT; nuestro Nginx escucha 10000 y Render mapea tráfico
+    envVars:
+      - key: APP_NAME
+        value: "AutoService"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://<TU-SERVICIO>.onrender.com
+      # Genera una clave y pégala aquí (formato base64:...)
+      - key: APP_KEY
+        value: base64:ojaUaXJewtxpzDN51IP4zthw6JGCT+tnWclA7vnzJpA=
+      # DB ---- (si usas Postgres de Render, reemplaza por valores reales)
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: <host>
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: <dbname>
+      - key: DB_USERNAME
+        value: <user>
+      - key: DB_PASSWORD
+        value: <pass>
+      - key: DB_SSLMODE
+        value: require
+    # Se ejecuta después de cada build; ideal para optimización
+    buildCommand: |
+      composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+    # Se ejecuta tras desplegar (con variables ya cargadas)
+    postDeployCommand: |
+      php artisan key:generate --force || true
+      php artisan storage:link || true
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+      php artisan migrate --seed --force
