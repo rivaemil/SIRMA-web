@@ -32,9 +32,6 @@ services:
         value: 1234567890
       - key: DB_SSLMODE
         value: require
-    # Se ejecuta después de cada build; ideal para optimización
-    buildCommand: |
-      composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
     # Se ejecuta tras desplegar (con variables ya cargadas)
     postDeployCommand: |
       php artisan key:generate --force || true
