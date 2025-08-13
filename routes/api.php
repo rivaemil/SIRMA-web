@@ -86,9 +86,21 @@ Route::post('/debug/migrate', function () {
 
 // Ejecuta el seeder principal o el tuyo específico
 Route::post('/debug/seed', function () {
-    Artisan::call('db:seed', [
-        '--class' => 'Database\\Seeders\\AutoShopSeeder',
-        '--force' => true
-    ]);
-    return response()->json(['output' => Artisan::output()]);
+    try {
+        Artisan::call('db:seed', [
+            '--class' => 'Database\\Seeders\\AutoShopSeeder',
+            '--force' => true
+        ]);
+        return response()->json([
+            'ok' => true,
+            'output' => Artisan::output(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error' => $e->getMessage(),
+            'file'  => $e->getFile(),
+            'line'  => $e->getLine(),
+        ], 500);
+    }
 });
