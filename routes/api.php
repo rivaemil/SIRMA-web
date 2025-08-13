@@ -10,7 +10,9 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MechanicController;
+
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 // API Routes
 Route::get('/user', function (Request $request) {
@@ -54,4 +56,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::get('/debug/users', function () {
     return User::select('id','email','role')->orderBy('id')->limit(5)->get();
+});
+
+Route::get('/debug/db', function () {
+    return [
+        'default' => config('database.default'),
+        'url'     => env('DATABASE_URL'),
+        'ok'      => DB::select('SELECT 1 as ok'),
+    ];
 });
