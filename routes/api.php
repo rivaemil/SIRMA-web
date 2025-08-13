@@ -14,6 +14,9 @@ use App\Http\Controllers\MechanicController;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Artisan;
+
 // API Routes
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -54,6 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('mechanics', MechanicController::class);
 });
 
+
+// Debug routes - to be removed in production
 Route::get('/debug/users', function () {
     return User::select('id','email','role')->orderBy('id')->limit(5)->get();
 });
@@ -64,4 +69,26 @@ Route::get('/debug/db', function () {
         'url'     => env('DATABASE_URL'),
         'ok'      => DB::select('SELECT 1 as ok'),
     ];
+});
+
+// Lista tablas existentes
+Route::get('/debug/tables', function () {
+    $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename");
+    return array_map(fn($t) => $t->tablename, $tables);
+});
+
+// Ejecuta migraciones
+Route::post('/debug/migrate', function () {
+    Artisan::call('config:clear');
+    Artisan::call('migrate', ['--force' => true]);
+    return response()->json(['output' => Artisan::output()]);
+});
+
+// Ejecuta el seeder principal o el tuyo específico
+Route::post('/debug/seed', function () {
+    Artisan::call('db:seed', [
+        '--class' => 'Database\\Seeders\\AutoShopSeeder',
+        '--force' => true
+    ]);
+    return response()->json(['output' => Artisan::output()]);
 });

@@ -21,7 +21,7 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: hostsirma
+        value: dpg-d2e0kradbo4c73ei3iq0-a
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
@@ -29,7 +29,7 @@ services:
       - key: DB_USERNAME
         value: sirmadmin
       - key: DB_PASSWORD
-        value: 1234567890
+        value: baBpjWrFIQKPWr7RGKGvM3Ln9b1zNA77
       - key: DB_SSLMODE
         value: require
     # Se ejecuta tras desplegar (con variables ya cargadas)
