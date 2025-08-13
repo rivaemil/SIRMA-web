@@ -7,13 +7,13 @@ services:
     # Render inyecta $PORT; nuestro Nginx escucha 10000 y Render mapea tráfico
     envVars:
       - key: APP_NAME
-        value: "AutoService"
+        value: "sirma"
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
       - key: APP_URL
-        value: https://<TU-SERVICIO>.onrender.com
+        value: https://sirma.onrender.com
       # Genera una clave y pégala aquí (formato base64:...)
       - key: APP_KEY
         value: base64:ojaUaXJewtxpzDN51IP4zthw6JGCT+tnWclA7vnzJpA=
@@ -21,15 +21,15 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: <host>
+        value: hostsirma
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
-        value: <dbname>
+        value: sirma
       - key: DB_USERNAME
-        value: <user>
+        value: sirmadmin
       - key: DB_PASSWORD
-        value: <pass>
+        value: 1234567890
       - key: DB_SSLMODE
         value: require
     # Se ejecuta después de cada build; ideal para optimización
