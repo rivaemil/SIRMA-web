@@ -50,3 +50,7 @@ Route::middleware(['auth:sanctum', 'role:mechanic'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('mechanics', MechanicController::class);
 });
+
+Route::get('/debug/users', function () {
+    return User::select('id','email','role')->orderBy('id')->limit(5)->get();
+});
