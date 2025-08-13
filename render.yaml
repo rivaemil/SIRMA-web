@@ -34,7 +34,6 @@ services:
         value: require
     # Se ejecuta tras desplegar (con variables ya cargadas)
     postDeployCommand: |
-      php artisan key:generate --force || true
       php artisan storage:link || true
       php artisan config:cache
       php artisan route:cache
