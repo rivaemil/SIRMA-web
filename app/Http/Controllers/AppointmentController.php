@@ -58,4 +58,15 @@ class AppointmentController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function myAppointments(Request $request)
+{
+    $clientId = $request->user()->client->id; // asumiendo relación User->Client
+    return response()->json(
+        Appointment::with('client', 'vehicle')
+            ->where('client_id', $clientId)
+            ->get(),
+        200
+    );
+}
 }

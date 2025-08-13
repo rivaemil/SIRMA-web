@@ -50,3 +50,7 @@ Route::middleware(['auth:sanctum', 'role:mechanic'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('mechanics', MechanicController::class);
 });
+
+Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
+    Route::get('/my-appointments', [AppointmentController::class, 'myAppointments']);
+});
