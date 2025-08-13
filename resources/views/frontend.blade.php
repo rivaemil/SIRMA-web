@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
 
-  <link rel="stylesheet" href="{{ asset('frontend/styles.css') }}">
+  <link rel="stylesheet" href="/frontend/styles.css">
 </head>
 <body>
   <!-- Login Screen -->
@@ -328,6 +328,6 @@
     </div>
   </div>
 
-  <script src="{{ asset('frontend/script.js') }}" defer></script>  
+  <script src="/frontend/script.js" defer></script>  
 </body>
 </html>
