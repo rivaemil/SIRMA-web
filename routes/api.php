@@ -10,6 +10,7 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MechanicController;
+use App\Models\User;
 
 // API Routes
 Route::get('/user', function (Request $request) {
