@@ -719,11 +719,21 @@ function buildLogCard(log, role) {
     <p class="note-detail"><i class="fas fa-align-left"></i> <span>Descripción:</span> ${escapeHTML(log.description || '')}</p>
   `;
 
-  const canEdit = (role === 'admin' || role === 'mechanic');
-  if (canEdit) {
-    const actions = document.createElement('div');
-    actions.className = 'note-actions';
+  // Crear contenedor de acciones siempre
+  const actions = document.createElement('div');
+  actions.className = 'note-actions';
 
+  // Botón PDF
+  const pdfLink = document.createElement('a');
+  pdfLink.className = 'btn-action btn-pdf';
+  pdfLink.href = `/bitacoras/${log.id}/pdf`;
+  pdfLink.title = 'Descargar PDF';
+  pdfLink.target = '_blank';
+  pdfLink.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i>';
+  actions.appendChild(pdfLink);
+
+  // Botones de edición/eliminación si corresponde
+  if (role === 'admin' || role === 'mechanic') {
     const editBtn = document.createElement('button');
     editBtn.className = 'btn-action btn-edit';
     editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -736,11 +746,12 @@ function buildLogCard(log, role) {
 
     actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
-    card.appendChild(actions);
   }
 
+  card.appendChild(actions);
   return card;
 }
+
 
 // =======================
 // Citas (Appointments)
