@@ -34,8 +34,10 @@ services:
         value: require
     # Se ejecuta tras desplegar (con variables ya cargadas)
     postDeployCommand: |
+      php artisan package:discover --ansi || true
       php artisan storage:link || true
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
+      php artisan config:clear
+      # php artisan route:clear   # por si antes cacheaste rutas
       php artisan migrate --seed --force
+      php artisan config:cache
+      php artisan view:cache
