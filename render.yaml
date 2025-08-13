@@ -37,7 +37,7 @@ services:
       php artisan package:discover --ansi || true
       php artisan storage:link || true
       php artisan config:clear
-      # php artisan route:clear   # por si antes cacheaste rutas
-      php artisan migrate --seed --force
+      php artisan migrate --force
+      php artisan db:seed --force
       php artisan config:cache
       php artisan view:cache
