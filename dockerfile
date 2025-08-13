@@ -12,10 +12,11 @@ RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interacti
 # -------------------------------
 FROM php:8.3-fpm
 
-# Paquetes y extensiones necesarias
+# Paquetes del sistema y headers de libs requeridas por las extensiones
 RUN apt-get update && apt-get install -y \
-    nginx supervisor git unzip libpq-dev libzip-dev libicu-dev \
-    && docker-php-ext-install pdo pdo_pgsql intl zip opcache mbstring bcmath \
+    nginx supervisor git unzip pkg-config \
+    libpq-dev libzip-dev libicu-dev libonig-dev \
+    && docker-php-ext-install -j$(nproc) pdo pdo_pgsql intl zip opcache mbstring bcmath \
     && rm -rf /var/lib/apt/lists/*
 
 # (Si usas MySQL, añade pdo_mysql)
