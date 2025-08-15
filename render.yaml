@@ -16,7 +16,7 @@ services:
         value: https://sirma.onrender.com
       # Genera una clave y pégala aquí (formato base64:...)
       - key: APP_KEY
-        value: base64:ojaUaXJewtxpzDN51IP4zthw6JGCT+tnWclA7vnzJpA=
+        value:
       # DB ---- (si usas Postgres de Render, reemplaza por valores reales)
       - key: DB_CONNECTION
         value: pgsql
